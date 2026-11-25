@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>고1 문학 낙하 게임</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Malgun Gothic',sans-serif}
+body{background:#0f172a;color:#f8fafc;display:flex;justify-content:center;padding:16px}
+.app{width:100%;max-width:640px;background:#1e293b;border-radius:18px;padding:20px;box-shadow:0 15px 40px rgba(0,0,0,.5)}
+.sc{display:none}.sc.on{display:block}
+button{cursor:pointer;border:0;border-radius:12px;font-weight:700}
+.btn1{background:#2563eb;color:#fff;padding:15px;font-size:1.05rem;width:100%;margin-top:10px}
+.btn2{background:#334155;color:#fff;padding:10px 14px;font-size:.9rem}
+input,textarea{width:100%;padding:12px;border-radius:10px;border:2px solid #334155;background:#0f172a;color:#fff;font-size:1rem;margin:6px 0 14px}
+.spd{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:6px 0 14px}
+.spd button{background:#0f172a;color:#94a3b8;padding:10px;border:2px solid transparent}
+.spd button.sel{border-color:#38bdf8;color:#fff;background:rgba(56,189,248,.15)}
+.rules{background:#0f172a;padding:12px;border-radius:12px;font-size:.84rem;line-height:1.6;color:#cbd5e1;margin-top:14px}
+.hud{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-weight:700;font-size:.9rem}
+.arena{position:relative;height:330px;background:#090d16;border-radius:14px;overflow:hidden;border:2px solid #334155;margin-bottom:12px}
+.card{position:absolute;left:50%;transform:translateX(-50%);width:90%;background:#fff;color:#0f172a;padding:14px;border-radius:12px;text-align:center;font-weight:800;font-size:1rem;line-height:1.4;word-break:keep-all}
+.toast{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);padding:12px 18px;border-radius:10px;font-weight:800;opacity:0;transition:.15s;width:85%;text-align:center}
+.toast.on{opacity:1}.ok{background:#10b981;color:#fff}.no{background:#ef4444;color:#fff}
+.ctrls{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.ctrls button{padding:15px 6px;font-size:1rem;display:flex;flex-direction:column;align-items:center;gap:4px}
+.b1{background:#ec4899;color:#fff}.b2{background:#f59e0b;color:#0f172a}.b3{background:#10b981;color:#0f172a}
+table{width:100%;border-collapse:collapse;margin-top:10px;font-size:.88rem}
+th,td{padding:9px 4px;text-align:center;border-bottom:1px solid #334155}
+tr.r1{background:rgba(251,191,36,.2);color:#fbbf24;font-weight:800}
+.miss{background:#0f172a;padding:10px;border-radius:10px;margin-top:8px;font-size:.84rem;line-height:1.45}
+</style>
+</head>
+<body>
+<div class="app">
+  <div id="s1" class="sc on">
+    <h2 style="margin-bottom:6px">📚 고1 한국 문학 낙하 게임 (30문항)</h2>
+    <p style="color:#94a3b8;font-size:.9rem;margin-bottom:14px">사미인곡 · 오발탄 · 유충렬전 중 알맞은 작품 버튼을 누르세요!</p>
+    <label>① 학생 이름 (예: 10230 박선영)</label>
+    <input type="text" id="pName" placeholder="학번과 이름을 입력하세요">
+    <label>② 낙하 속도</label>
+    <div class="spd">
+      <button type="button" data-v="0.75">🐢 천천히</button>
+      <button type="button" class="sel" data-v="1">🚶 보통</button>
+      <button type="button" class="btn-fast" data-v="1.35">🚀 빠르게</button>
+    </div>
+    <button type="button" class="btn1" id="goBtn">🎮 게임 시작하기</button>
+    <button type="button" class="btn2" id="rankOpenBtn" style="width:100%;margin-top:8px">🏆 30명 순위표 / 교사용 집계</button>
+    <div class="rules">
+      • 카드가 바닥에 닿기 전에 알맞은 작품 버튼을 누르세요. (목숨 ❤ 8개)<br>
+      • 정답 100점 + 스피드 보너스(최대 50점) + 콤보 보너스! (동점 시 빠른 시간 우선)<br>
+      • PC에서는 키보드 <b>1, 2, 3</b> 번 키로도 누를 수 있습니다.
+    </div>
+  </div>
+
+  <div id="s2" class="sc">
+    <div class="hud">
+      <span id="hInfo" style="color:#38bdf8">1단계 (1/30)</span>
+      <span id="hLife">❤❤❤❤❤❤❤❤</span>
+      <span id="hScore" style="color:#fbbf24">0점</span>
+    </div>
+    <div class="arena" id="arena">
+      <div class="card" id="card" style="top:-90px"><div id="cNum" style="font-size:.75rem;color:#64748b;margin-bottom:4px">1/30</div><div id="cTxt"></div></div>
+      <div class="toast" id="toast"></div>
+    </div>
+    <div class="ctrls">
+      <button type="button" class="b1" data-w="사미인곡">사미인곡<small>정철·가사(1)</small></button>
+      <button type="button" class="b2" data-w="오발탄">오발탄<small>이범선·현대소설(2)</small></button>
+      <button type="button" class="b3" data-w="유충렬전">유충렬전<small>고전영웅소설(3)</small></button>
+    </div>
+  </div>
+
+  <div id="s3" class="sc">
+    <div style="background:#0f172a;padding:18px;border-radius:14px;text-align:center;margin-bottom:12px">
+      <h3 id="rName">결과</h3>
+      <div style="font-size:2.2rem;font-weight:900;color:#fbbf24;margin:6px 0" id="rScore">0점</div>
+      <div style="color:#94a3b8;font-size:.9rem" id="rStat"></div>
+    </div>
+    <button type="button" class="btn1" id="copyBtn">📋 내 점수 제출용 메시지 복사하기</button>
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <button type="button" class="btn2" style="flex:1" id="rRankBtn">🏆 순위표 보기</button>
+      <button type="button" class="btn2" style="flex:1" id="reBtn">🔄 다시하기</button>
+    </div>
+    <div id="missBox" style="margin-top:14px"></div>
+  </div>
+
+  <div id="s4" class="sc">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <h3>🏆 우리 반 순위표 (TOP 30)</h3>
+      <button type="button" class="btn2" id="homeBtn">← 돌아가기</button>
+    </div>
+    <div style="background:#0f172a;padding:12px;border-radius:12px;margin-top:10px;font-size:.84rem">
+      <b>💡 교사용 30명 일괄 집계:</b> 학생들이 복사해 올린 <code>[문학퀴즈|...]</code> 메시지를 아래에 통째로 붙여넣고 정렬 버튼을 누르세요!
+      <textarea id="bulkTxt" rows="4" placeholder="[문학퀴즈|10230박선영|3450점|29/30|45.2초]&#10;[문학퀴즈|10201김철수|3600점|30/30|41.0초]"></textarea>
+      <button type="button" class="btn1" style="margin-top:0;padding:10px" id="sortBtn">⚡ 30명 1등~30등 자동 정렬하기</button>
+    </div>
+    <table><thead><tr><th>등수</th><th>이름</th><th>점수</th><th>정답</th><th>시간</th></tr></thead><tbody id="rBody"></tbody></table>
+    <button type="button" class="btn2" style="width:100%;margin-top:10px;color:#fda4af" id="clrBtn">🗑️ 순위 초기화</button>
+  </div>
+</div>
+<script>
+const Q=[
+{s:1,t:'"이 몸 삼기실 제 님을 조차 삼기시니"',a:'사미인곡',d:'서사 첫 구절로 임과의 운명적 인연을 드러냄.'},
+{s:1,t:'양공주가 되어 가족의 생계를 떠받치는 여동생 명숙',a:'오발탄',d:'전후 극심한 빈곤 속에서 희생되는 인물.'},
+{s:1,t:'간신 정한담과 최일귀의 모함으로 유배된 아버지 유심',a:'유충렬전',d:'주인공 유충렬의 가문이 겪는 초기 시련.'},
+{s:1,t:'이북 고향을 그리워하며 "가자! 가자!"를 외치는 노모',a:'오발탄',d:'전쟁 트라우마와 실향민의 한을 상징.'},
+{s:1,t:'임에게 보내는 네 가지 선물: 봄의 매화, 여름의 옷, 가을의 청광, 겨울의 양춘',a:'사미인곡',d:'사계절의 흐름에 따라 임에게 바치는 변함없는 연정과 정성.'},
+{s:1,t:'백룡사 노승에게 병법과 도술을 배우는 비범한 성장',a:'유충렬전',d:'조력자를 만나 영웅적 능력을 획득함.'},
+{s:1,t:'계리사무소 서기로 일하며 양심과 가난 사이에서 고뇌하는 송철호',a:'오발탄',d:'부조리한 현실에 적응하지 못하는 소시민 주인공.'},
+{s:1,t:'천상 백옥경에서 하계로 내려온 선녀(적강 모티프) 화자',a:'사미인곡',d:'임금과 이별한 작가 정철 자신의 처지를 적강 선녀에 빗댐.'},
+{s:1,t:'토번과 가달의 침입으로 위기에 빠진 명나라 천자를 구출함',a:'유충렬전',d:'국가적 위기를 극복하고 충의를 실현하는 핵심 사건.'},
+{s:1,t:'사랑니 두 개를 뽑고 피를 흘리며 택시 안에서 방황하는 결말',a:'오발탄',d:'목적지를 잃고 표류하는 전후 현대인의 비극.'},
+{s:2,t:'여름에 임에게 보내기 위해 정성껏 바느질해 지은 옷 "원앙금"',a:'사미인곡',d:'화자의 간절한 정성과 연모의 마음을 담은 매개체.'},
+{s:2,t:'형에게 양심대로 살지 말자고 절규하다 권총 강도를 저지른 동생 영호',a:'오발탄',d:'양심을 지키는 형 철호와 대비되며 파멸로 치닫는 전후 세대.'},
+{s:2,t:'죽어서라도 임을 따르기 위해 "범나비"가 되겠다는 결사의 다짐',a:'사미인곡',d:'죽음 이후에도 이어가려는 일편단심의 사랑.'},
+{s:2,t:'주인공과 정혼한 강희주의 딸 강낭자와의 이별과 극적 재회',a:'유충렬전',d:'영웅소설에 나타나는 결연 모티프와 고난 극복.'},
+{s:2,t:'극심한 빈곤과 영양실조 속에서 셋째 아이를 낳다 난산 끝에 숨진 아내',a:'오발탄',d:'전후의 비참한 생활고로 해체되는 가정의 비극.'},
+{s:2,t:'항복을 거부하고 버티던 역적 정한담을 사로잡아 처단함',a:'유충렬전',d:'가문의 원수를 갚고 국가 질서를 회복하는 권선징악.'},
+{s:2,t:'가을밤 "기러기 아니 오니 님의 소식 뉘 알리오"라며 한탄함',a:'사미인곡',d:'단절된 임의 소식을 기다리며 느끼는 그리움.'},
+{s:2,t:'1950년대 서울 해방촌 판자촌을 배경으로 한 도시 하층민의 삶',a:'오발탄',d:'전쟁의 상흔이 남은 사실주의적 공간 배경.'},
+{s:2,t:'천상의 자미원 대장성이 인간 세상에 태어났다는 천상적 근원',a:'유충렬전',d:'주인공의 고귀한 혈통을 부여하는 전기적 설정.'},
+{s:2,t:'해와 달(임금)의 빛을 가로막아 소식을 단절시키는 "구름과 안개"',a:'사미인곡',d:'임과 화자 사이를 가로막는 간신배를 상징하는 자연물.'},
+{s:3,t:'임금을 향한 충정을 버림받은 여인의 연정에 빗댄 충신연주지사',a:'사미인곡',d:'조선 시대 가사 문학의 백미로 꼽히는 정철의 대표작.'},
+{s:3,t:'시대의 포화 속에서 방향을 잃고 빗나간 총알처럼 표류하는 인간상',a:'오발탄',d:'작품 제목 "오발탄"이 지닌 핵심적인 상징적 의미.'},
+{s:3,t:'고귀한 혈통-기아-구출-성장-시련-승리로 이어지는 영웅의 일대기',a:'유충렬전',d:'고전 영웅소설의 전형적인 서사 구조를 충실히 따름.'},
+{s:3,t:'3·4조 4음보 연속체이며 마지막 행이 시조 종장과 유사한 정격가사',a:'사미인곡',d:'작품의 갈래상 형식적·운율적 특징.'},
+{s:3,t:'충치와 치통이라는 신체적 고통을 통해 부조리한 현실의 아픔을 형상화',a:'오발탄',d:'질병 모티프를 활용해 내면적 고통을 드러낸 기법.'},
+{s:3,t:'비현실적 도술과 무용담을 통해 당대 민중의 대리 만족 욕구를 반영',a:'유충렬전',d:'조선 후기 독자층에게 큰 인기를 얻은 군담소설의 창작 배경.'},
+{s:3,t:'겨울에 따뜻한 "양춘(봄볕)"을 부쳐 내어 님 계신 곳에 쏘이고자 함',a:'사미인곡',d:'임의 안위를 걱정하며 따뜻한 정성을 보내려는 충정.'},
+{s:3,t:'택시 운전기사의 "어디로 갑니까?"라는 질문에 "글쎄요"라고 답하는 결말',a:'오발탄',d:'갈 곳을 잃은 전후 지식인의 방황을 보여주는 열린 결말.'},
+{s:3,t:'장성검과 용린갑, 천사마라는 신이한 보물을 얻어 전장을 호령함',a:'유충렬전',d:'고난을 돌파하기 위해 영웅적 무기를 획득하는 서사적 장치.'},
+{s:3,t:'유교적 충효 사상을 바탕으로 간신을 응징하고 가문의 명예를 회복함',a:'유충렬전',d:'전통적 봉건 질서의 수호와 충의 실현이라는 주제 의식.'}
+];
+let nm='',spd=1,idx=0,sc=0,lf=8,cb=0,ok=0,ms=[],t0=0,ct=0,cy=-90,aid=null,ps=false,qs=[];
+const show=id=>{document.querySelectorAll('.sc').forEach(e=>e.classList.remove('on'));document.getElementById(id).classList.add('on')};
+document.querySelectorAll('.spd button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.spd button').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');spd=parseFloat(b.dataset.v)});
+document.getElementById('goBtn').onclick=()=>{
+  nm=document.getElementById('pName').value.trim();
+  if(!nm)return alert('학생 이름을 먼저 입력해 주세요!');
+  idx=0;sc=0;lf=8;cb=0;ok=0;ms=[];
+  const sh=a=>a.sort(()=>Math.random()-.5);
+  qs=[...sh(Q.filter(q=>q.s===1)),...sh(Q.filter(q=>q.s===2)),...sh(Q.filter(q=>q.s===3))];
+  t0=performance.now();show('s2');next();
+};
+function hud(){
+  const q=qs[idx]||qs[qs.length-1];
+  document.getElementById('hInfo').textContent=`${nm} · ${q.s}단계 (${Math.min(idx+1,30)}/30)`;
+  document.getElementById('hLife').textContent='❤'.repeat(Math.max(0,lf))+'🖤'.repeat(Math.max(0,8-lf));
+  document.getElementById('hScore').textContent=sc+'점';
+}
+function toast(m,isOk){
+  const t=document.getElementById('toast');t.textContent=m;t.className='toast on '+(isOk?'ok':'no');
+  setTimeout(()=>t.classList.remove('on'),600);
+}
+function next(){
+  if(idx>=qs.length||lf<=0)return finish();
+  ps=false;hud();
+  const q=qs[idx],c=document.getElementById('card');
+  document.getElementById('cNum').textContent=`[${q.s}단계] ${idx+1} / 30`;
+  document.getElementById('cTxt').textContent=q.t;
+  cy=-85;c.style.top=cy+'px';ct=performance.now();
+  const h=document.getElementById('arena').clientHeight,v=1.15*spd*(1+(q.s-1)*.22);
+  function loop(){if(ps)return;cy+=v;c.style.top=cy+'px';if(cy+c.offsetHeight>=h)return ans(null);aid=requestAnimationFrame(loop)}
+  cancelAnimationFrame(aid);aid=requestAnimationFrame(loop);
+}
+function ans(w){
+  if(ps||!document.getElementById('s2').classList.contains('on'))return;
+  ps=true;cancelAnimationFrame(aid);
+  const q=qs[idx];
+  if(w===q.a){
+    const sb=Math.max(0,Math.round(50-(performance.now()-ct)/100));
+    cb++;const g=100+sb+(cb>=2?cb*10:0);sc+=g;ok++;
+    toast(`⭕ 정답! +${g}점`,true);
+  }else{
+    cb=0;lf--;ms.push({...q,u:w||'놓침'});
+    toast(`❌ 오답! 정답: ${q.a}`,false);
+  }
+  idx++;hud();setTimeout(next,500);
+}
+document.querySelectorAll('.ctrls button').forEach(b=>b.onclick=()=>ans(b.dataset.w));
+window.onkeydown=e=>{if(e.key==='1')ans('사미인곡');if(e.key==='2')ans('오발탄');if(e.key==='3')ans('유충렬전')};
+function finish(){
+  cancelAnimationFrame(aid);
+  const sec=((performance.now()-t0)/1000).toFixed(1);
+  document.getElementById('rName').textContent=`${nm} 학생의 기록`;
+  document.getElementById('rScore').textContent=sc+'점';
+  document.getElementById('rStat').textContent=`정답 ${ok}/30개 · 소요시간 ${sec}초`;
+  const mb=document.getElementById('missBox');
+  mb.innerHTML=ms.length?'<h4>📌 틀리거나 놓친 카드 복습</h4>'+ms.map(m=>`<div class="miss"><b>[${m.a}]</b> ${m.t}<br><span style="color:#94a3b8">💡 ${m.d}</span></div>`).join(''):'';
+  saveRank({n:nm,s:sc,o:ok,t:parseFloat(sec)});
+  show('s3');
+}
+function saveRank(r){
+  let l=JSON.parse(localStorage.getItem('lit_r')||'[]'),i=l.findIndex(x=>x.n===r.n);
+  if(i>=0){if(r.s>l[i].s||(r.s===l[i].s&&r.t<l[i].t))l[i]=r}else l.push(r);
+  localStorage.setItem('lit_r',JSON.stringify(l));
+}
+function drawRank(custom){
+  let l=custom||JSON.parse(localStorage.getItem('lit_r')||'[]');
+  l.sort((a,b)=>(b.s-a.s)||(a.t-b.t));
+  document.getElementById('rBody').innerHTML=l.length?l.slice(0,30).map((r,i)=>`<tr class="${i===0?'r1':''}"><td>${i===0?'🥇1등':(i+1)+'등'}</td><td>${r.n}</td><td>${r.s}점</td><td>${r.o}/30</td><td>${r.t}초</td></tr>`).join(''):'<tr><td colspan="5" style="color:#94a3b8;padding:20px">기록이 없습니다.</td></tr>';
+}
+document.getElementById('copyBtn').onclick=()=>{
+  const sec=document.getElementById('rStat').textContent.split('소요시간 ')[1];
+  const m=`[문학퀴즈|${nm}|${sc}점|${ok}/30|${sec}]`;
+  navigator.clipboard.writeText(m).then(()=>alert('복사 완료! 선생님께 제출하세요.\n\n'+m));
+};
+document.getElementById('rankOpenBtn').onclick=()=>{drawRank();show('s4')};
+document.getElementById('rRankBtn').onclick=()=>{drawRank();show('s4')};
+document.getElementById('homeBtn').onclick=()=>show('s1');
+document.getElementById('reBtn').onclick=()=>show('s1');
+document.getElementById('sortBtn').onclick=()=>{
+  const raw=document.getElementById('bulkTxt').value,rx=/\[문학퀴즈\|([^|]+)\|(\d+)점\|(\d+)\/30\|([\d.]+)초\]/g,mp=new Map();let m;
+  while((m=rx.exec(raw))!==null){
+    const r={n:m[1].trim(),s:+m[2],o:+m[3],t:+m[4]};
+    if(!mp.has(r.n)||r.s>mp.get(r.n).s||(r.s===mp.get(r.n).s&&r.t<mp.get(r.n).t))mp.set(r.n,r);
+  }
+  const arr=[...mp.values()];
+  if(!arr.length)return alert('인식된 기록이 없습니다.');
+  localStorage.setItem('lit_r',JSON.stringify(arr));drawRank(arr);alert(arr.length+'명 등수 정렬 완료!');
+};
+document.getElementById('clrBtn').onclick=()=>{if(confirm('초기화할까요?')){localStorage.removeItem('lit_r');drawRank([])}};
+</script>
+</body>
+</html>
